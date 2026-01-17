@@ -32,7 +32,6 @@
 const LOAD_KEY = 'x_load_complete';
 const DEVICE_ID = navigator.userAgent + screen.width + screen.height + navigator.language;
 
-// Check if already loaded
 if(localStorage.getItem(LOAD_KEY) === DEVICE_ID){
     document.getElementById('block').classList.remove('hidden');
     let count = 5;
@@ -42,15 +41,12 @@ if(localStorage.getItem(LOAD_KEY) === DEVICE_ID){
             clearInterval(countdown);
             window.location.href = "utama.html";
         }
-    }, 1000);
+    }, 500);
 }else{
     // First time loading
     let progress = 0;
     const steps = [
         "Initializing...",
-        "Checking security...",
-        "Loading modules...",
-        "Finalizing..."
     ];
     
     const log = document.getElementById('log');
@@ -72,7 +68,7 @@ if(localStorage.getItem(LOAD_KEY) === DEVICE_ID){
             localStorage.setItem(LOAD_KEY, DEVICE_ID);
             setTimeout(() => {
                 window.location.href = "cyber.html";
-            }, 1000);
+            }, 500);
         }
     }, 800);
 }

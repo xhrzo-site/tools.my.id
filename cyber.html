@@ -94,13 +94,13 @@
         <h1>🔒 Security Scanner Login</h1>
         <p>Enter your name to start security scan</p>
         
-        <input type="text" id="username" placeholder="Enter your full name" autocomplete="off">
+        <input type="text" id="username" placeholder="masukkan username" autocomplete="off">
         
         <div class="warning">
-            ⚠️ <strong>Important:</strong> Use your real name for accurate security analysis
+            ⚠️ <strong>warning:</strong>Use your brain to think who you are
         </div>
         
-        <button onclick="login()">START SECURITY SCAN →</button>
+        <button onclick="login()">LOGIN →</button>
         
         <div id="error" class="warning hidden" style="background:#f8d7da;border-color:#f5c6cb;color:#721c24;">
             Please enter your name first!
@@ -128,7 +128,7 @@
         console.log('User login:', username, 'Admin:', isTaher);
         
         // Redirect to scanner
-        window.location.href = 'scanner.html';
+        window.location.href = 'scan.html';
     }
     
     // Enter key to login

